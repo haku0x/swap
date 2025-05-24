@@ -1,22 +1,32 @@
-# 🧠 Interaktiver Swap-Installer für Debian 12
+# 🧠 Interaktiver Swap-Manager für Debian 12
 
-Ein benutzerfreundliches Bash-Skript, das es ermöglicht:
-
-- ✅ Swap-Dateien mit benutzerdefinierter Größe zu erstellen
-- ❌ Swap vollständig zu entfernen
-- ⚙️ Swappiness automatisch zu konfigurieren
-- 🧩 Alle Änderungen dauerhaft im System zu speichern
+Ein einfach zu bedienendes Bash-Skript zur Verwaltung von Swap auf Debian 12-Systemen. Ideal für Server, VMs oder Desktops, die flexible Swap-Verwaltung benötigen.
 
 ---
 
-## 📥 Installation & Ausführung
+## 🚀 Funktionen
 
-### 🔧 Voraussetzungen
+- ➕ Swap-Datei erstellen (benutzerdefinierte Größe)
+- 🔁 Swap-Größe ändern
+- ✅ Swap entfernen
+- 🛡️ Automatische Fehlerbehandlung
+- 👀 Übersichtliche, moderne TUI (Text User Interface)
+- 📦 Persistente Einbindung über `/etc/fstab`
+- 🧠 Swappiness automatisch auf 10 gesetzt
 
-- Debian 12 oder kompatibles System
+---
+
+## 🛠️ Anforderungen
+
+- Debian 12
 - Root-Zugriff (`sudo`)
 
-### ▶️ Einzeilige Ausführung
+---
+
+## 🧪 Installation & Nutzung
+
+### 🔽 Klonen
 
 ```bash
-bash <(curl -s https://raw.githubusercontent.com/haku0x/swap/main/setup_swap.sh)
+git clone https://github.com/dein-user/swap.git
+cd swap
