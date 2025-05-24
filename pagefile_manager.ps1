@@ -1,78 +1,54 @@
-# Interaktiver Pagefile-Manager für Windows 10/11
-# Autor: haku0x
-# Lizenz: MIT
+Add-Type -AssemblyName System.Windows.Forms
 
-function Show-Header {
-    Clear-Host
-    Write-Host ""
-    Write-Host "╔════════════════════════════════════════════╗" -ForegroundColor Magenta
-    Write-Host "║       🧠 Interaktiver Pagefile-Manager     ║" -ForegroundColor Magenta
-    Write-Host "║             für Windows 10/11             ║" -ForegroundColor Magenta
-    Write-Host "╚════════════════════════════════════════════╝" -ForegroundColor Magenta
-    Write-Host ""
-}
+# GUI-Fenster
+$form = New-Object System.Windows.Forms.Form
+$form.Text = "🧠 Pagefile-Manager"
+$form.Size = New-Object System.Drawing.Size(400, 300)
+$form.StartPosition = "CenterScreen"
 
-function Show-CurrentSettings {
-    $pagefile = Get-WmiObject -Query "SELECT * FROM Win32_PageFileSetting"
-    if ($pagefile) {
-        Write-Host "`n📄 Aktuelle Pagefile-Konfiguration:" -ForegroundColor Green
-        $pagefile | Format-Table Name, InitialSize, MaximumSize
-    } else {
-        Write-Host "⚠️ Kein Pagefile konfiguriert oder Zugriff verweigert." -ForegroundColor Yellow
-    }
-}
+# Beschriftung
+$label = New-Object System.Windows.Forms.Label
+$label.Text = "Minimale Größe (MB):"
+$label.Location = New-Object System.Drawing.Point(20, 20)
+$form.Controls.Add($label)
 
-function Set-ManualPagefile {
-    param (
-        [int]$InitialSize,
-        [int]$MaxSize
-    )
-    Write-Host "⚙️ Setze Pagefile manuell auf ${InitialSize}MB bis ${MaxSize}MB..." -ForegroundColor Cyan
+$minInput = New-Object System.Windows.Forms.TextBox
+$minInput.Location = New-Object System.Drawing.Point(150, 20)
+$form.Controls.Add($minInput)
+
+$label2 = New-Object System.Windows.Forms.Label
+$label2.Text = "Maximale Größe (MB):"
+$label2.Location = New-Object System.Drawing.Point(20, 60)
+$form.Controls.Add($label2)
+
+$maxInput = New-Object System.Windows.Forms.TextBox
+$maxInput.Location = New-Object System.Drawing.Point(150, 60)
+$form.Controls.Add($maxInput)
+
+# Button: Setzen
+$setBtn = New-Object System.Windows.Forms.Button
+$setBtn.Text = "Pagefile setzen"
+$setBtn.Location = New-Object System.Drawing.Point(20, 100)
+$setBtn.Add_Click({
+    $min = [int]$minInput.Text
+    $max = [int]$maxInput.Text
     wmic computersystem where name="%computername%" set AutomaticManagedPagefile=False | Out-Null
-    wmic pagefileset where name="C:\\pagefile.sys" set InitialSize=$InitialSize,MaximumSize=$MaxSize | Out-Null
-    Write-Host "✅ Pagefile wurde angepasst." -ForegroundColor Green
-}
+    wmic pagefileset where name="C:\\pagefile.sys" set InitialSize=$min,MaximumSize=$max | Out-Null
+    [System.Windows.Forms.MessageBox]::Show("✅ Pagefile wurde gesetzt.")
+})
+$form.Controls.Add($setBtn)
 
-function Enable-AutomaticPagefile {
-    Write-Host "🔁 Setze Pagefile-Verwaltung zurück auf 'automatisch'..." -ForegroundColor Cyan
+# Button: Automatik
+$autoBtn = New-Object System.Windows.Forms.Button
+$autoBtn.Text = "Automatische Verwaltung"
+$autoBtn.Location = New-Object System.Drawing.Point(150, 100)
+$autoBtn.Add_Click({
     wmic computersystem where name="%computername%" set AutomaticManagedPagefile=True | Out-Null
-    Write-Host "✅ Automatische Verwaltung aktiviert." -ForegroundColor Green
-}
+    [System.Windows.Forms.MessageBox]::Show("🔁 Automatische Verwaltung aktiviert.")
+})
+$form.Controls.Add($autoBtn)
 
-function Remove-Pagefile {
-    Write-Host "🗑️ Entferne benutzerdefinierten Pagefile-Eintrag..." -ForegroundColor Cyan
-    Enable-AutomaticPagefile
-}
-
-function Show-Menu {
-    Show-Header
-    Show-CurrentSettings
-    Write-Host ""
-    Write-Host "[1] ➕ Pagefile manuell konfigurieren" -ForegroundColor Yellow
-    Write-Host "[2] 🔁 Automatische Verwaltung aktivieren" -ForegroundColor Yellow
-    Write-Host "[3] ❌ Pagefile entfernen (nur benutzerdefiniert)" -ForegroundColor Yellow
-    Write-Host "[4] 🚪 Beenden" -ForegroundColor Yellow
-    Write-Host ""
-    $choice = Read-Host "🔢 Auswahl [1-4]"
-    switch ($choice) {
-        "1" {
-            $initial = Read-Host "📦 Minimale Größe in MB (z.B. 2048)"
-            $max = Read-Host "📏 Maximale Größe in MB (z.B. 8192)"
-            Set-ManualPagefile -InitialSize $initial -MaxSize $max
-        }
-        "2" { Enable-AutomaticPagefile }
-        "3" { Remove-Pagefile }
-        "4" {
-            Write-Host "`n👋 Beende Skript..." -ForegroundColor Green
-            exit
-        }
-        default {
-            Write-Host "❗ Ungültige Eingabe." -ForegroundColor Red
-        }
-    }
-    Pause
-    Show-Menu
-}
-
-# Starte Menü
-Show-Menu
+# Fenster anzeigen
+$form.Topmost = $true
+$form.Add_Shown({$form.Activate()})
+[void]$form.ShowDialog()
