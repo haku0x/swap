@@ -1,46 +1,63 @@
 # 🧠 Interaktiver Swap- & Pagefile-Manager für Debian 12 & Windows 10/11
 
-Ein einfach zu bedienendes, interaktives Tool zur Verwaltung von **Swap (Linux)** und **Pagefile (Windows)**.  
-Ideal für Server, virtuelle Maschinen oder Desktops, die flexible Speicherverwaltung benötigen.
+Ein benutzerfreundliches, interaktives Tool zur Verwaltung von **Swap (Linux)** und **Pagefile (Windows)**.
+Perfekt geeignet für Server, virtuelle Maschinen oder Desktops, die eine flexible Speicherverwaltung benötigen.
 
 ---
 
 ## 🚀 Funktionen
 
-### 🐧 Debian 12
-- ➕ Swap-Datei erstellen (benutzerdefinierte Größe)
-- 🔁 Swap-Größe ändern
-- ✅ Swap entfernen
-- 🛡️ Automatische Fehlerbehandlung
-- 📦 Persistente Einbindung über `/etc/fstab`
-- 🧠 Swappiness auf `10` gesetzt
+### 🐧 Für Debian 12
 
-### 🪟 Windows 10/11
-- ➕ Pagefile manuell konfigurieren
-- 🔁 Automatische Verwaltung aktivieren/deaktivieren
-- ✅ Benutzerdefinierten Pagefile-Eintrag entfernen
-- 💬 Interaktive PowerShell-Benutzeroberfläche
+* ➕ Swap-Datei erstellen (benutzerdefinierte Größe)
+* 🔁 Bestehende Swap-Größe anpassen
+* ✅ Swap-Datei sicher entfernen
+* 🛡️ Eingebaute Fehlerbehandlung
+* 📆 Automatische Einbindung über `/etc/fstab`
+* 🧠 Swappiness automatisch auf `10` gesetzt
+
+### 🪟 Für Windows 10/11
+
+* ➕ Pagefile manuell festlegen (Initial-/Maximalgröße)
+* 🔁 Automatische Speicherverwaltung aktivieren oder deaktivieren
+* ✅ Benutzerdefinierten Pagefile-Eintrag entfernen
+* 💬 Interaktive PowerShell-Benutzeroberfläche
 
 ---
 
 ## 🛠️ Anforderungen
 
-| System   | Anforderungen                              |
-|----------|--------------------------------------------|
-| Debian   | Debian 12, Root-Rechte (`sudo`)            |
-| Windows  | Windows 10/11, PowerShell als Administrator|
+| Betriebssystem | Voraussetzungen                            |
+| -------------- | ------------------------------------------ |
+| Debian         | Debian 12, Root-Rechte (`sudo`)            |
+| Windows        | Windows 10/11, PowerShell mit Adminrechten |
 
 ---
 
 ## ▶️ Schnellstart
 
-🪟 Windows (per PowerShell ausführen)
+### 🪟 Windows (per PowerShell ausführen)
+
 ```powershell
 irm https://raw.githubusercontent.com/haku0x/swap/main/pagefile_manager.ps1 | iex
+```
 
 ### 🐧 Debian (per Bash ausführen)
 
-```bash
+```powershell
 bash <(curl -s https://raw.githubusercontent.com/haku0x/swap/main/setup_swap.sh)
+```
 
+## ⚠️ Hinweise
+
+* Unter Windows muss PowerShell **als Administrator** gestartet werden.
+* Unter Debian muss das Skript mit `sudo` ausgeführt werden, wenn du kein Root bist.
+* Pagefile-Änderungen unter Windows können einen Neustart erfordern.
+
+---
+
+## 🧑‍💻 Lizenz
+
+MIT License – freie Nutzung, Veränderung und Weitergabe erlaubt.
+Autor: [haku0x](https://github.com/haku0x)
 
