@@ -35,7 +35,7 @@ Ideal für Server, virtuelle Maschinen oder Desktops, die flexible Speicherverwa
 ## ▶️ Schnellstart
 
 🪟 Windows (per PowerShell ausführen)
-
+```powershell
 irm https://raw.githubusercontent.com/haku0x/swap/main/pagefile_manager.ps1 | iex
 
 ### 🐧 Debian (per Bash ausführen)
