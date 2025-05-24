@@ -1,32 +1,46 @@
-# 🧠 Interaktiver Swap-Manager für Debian 12
+# 🧠 Interaktiver Swap- & Pagefile-Manager für Debian 12 & Windows 10/11
 
-Ein einfach zu bedienendes Bash-Skript zur Verwaltung von Swap auf Debian 12-Systemen. Ideal für Server, VMs oder Desktops, die flexible Swap-Verwaltung benötigen.
+Ein einfach zu bedienendes, interaktives Tool zur Verwaltung von **Swap (Linux)** und **Pagefile (Windows)**.  
+Ideal für Server, virtuelle Maschinen oder Desktops, die flexible Speicherverwaltung benötigen.
 
 ---
 
 ## 🚀 Funktionen
 
+### 🐧 Debian 12
 - ➕ Swap-Datei erstellen (benutzerdefinierte Größe)
 - 🔁 Swap-Größe ändern
 - ✅ Swap entfernen
 - 🛡️ Automatische Fehlerbehandlung
-- 👀 Übersichtliche, moderne TUI (Text User Interface)
 - 📦 Persistente Einbindung über `/etc/fstab`
-- 🧠 Swappiness automatisch auf 10 gesetzt
+- 🧠 Swappiness auf `10` gesetzt
+
+### 🪟 Windows 10/11
+- ➕ Pagefile manuell konfigurieren
+- 🔁 Automatische Verwaltung aktivieren/deaktivieren
+- ✅ Benutzerdefinierten Pagefile-Eintrag entfernen
+- 💬 Interaktive PowerShell-Benutzeroberfläche
 
 ---
 
 ## 🛠️ Anforderungen
 
-- Debian 12
-- Root-Zugriff (`sudo`)
+| System   | Anforderungen                              |
+|----------|--------------------------------------------|
+| Debian   | Debian 12, Root-Rechte (`sudo`)            |
+| Windows  | Windows 10/11, PowerShell als Administrator|
 
 ---
 
-## 🧪 Installation & Nutzung
+## ▶️ Schnellstart
 
-### ▶️ Schnelle Ausführung per Einzeiler
-Du kannst das Skript direkt ohne vorherigen Download ausführen:
+🪟 Windows (per PowerShell ausführen)
+
+irm https://raw.githubusercontent.com/haku0x/swap/main/pagefile_manager.ps1 | iex
+
+### 🐧 Debian (per Bash ausführen)
 
 ```bash
 bash <(curl -s https://raw.githubusercontent.com/haku0x/swap/main/setup_swap.sh)
+
+
