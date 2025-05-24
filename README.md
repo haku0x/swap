@@ -36,7 +36,8 @@ Perfekt geeignet für Server, virtuelle Maschinen oder Desktops, die eine flexib
 
 ## ▶️ Schnellstart
 
-### 🪟 Windows (per PowerShell ausführen)
+### 🪟 Windows (Ausführung per PowerShell)  
+⚠️ *Hinweis: Die PowerShell-Version ist derzeit nicht funktionsfähig und wird überarbeitet.*
 
 ```powershell
 irm https://raw.githubusercontent.com/haku0x/swap/main/pagefile_manager.ps1 | iex
