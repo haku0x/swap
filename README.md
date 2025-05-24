@@ -28,5 +28,4 @@ Ein einfach zu bedienendes Bash-Skript zur Verwaltung von Swap auf Debian 12-Sys
 ### 🔽 Klonen
 
 ```bash
-git clone https://github.com/dein-user/swap.git
-cd swap
+bash <(curl -s https://raw.githubusercontent.com/haku0x/swap/main/setup_swap.sh)
