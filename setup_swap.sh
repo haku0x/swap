@@ -1,6 +1,6 @@
 #!/bin/bash
 # 🚀 Interaktiver Swap-Manager für Debian 12
-# Autor: haku0x | Lizenz: MIT (erweitert von ChatGPT)
+# Autor: haku0x  Lizenz: MIT
 
 set -euo pipefail
 trap 'echo -e "\n${RED}❌ Ein unerwarteter Fehler ist aufgetreten. Breche ab.${NC}"; exit 1' ERR
@@ -35,16 +35,22 @@ function show_menu() {
   echo -e "${YELLOW}[1]${NC} ➕ Swap erstellen"
   echo -e "${YELLOW}[2]${NC} ❌ Swap entfernen"
   echo -e "${YELLOW}[3]${NC} 🔁 Swap-Größe ändern"
-  echo -e "${YELLOW}[4]${NC} 🚪 Beenden"
-  echo -e "${YELLOW}[5]${NC} 📊 Swap-Nutzung anzeigen"
-  echo -ne "\n🔢 ${CYAN}Auswahl eingeben [1-5]: ${NC}"
+  echo -e "${YELLOW}[4]${NC} 📊 Swap-Nutzung nach Prozessen"
+  echo -e "${YELLOW}[5]${NC} 🔧 Swappiness-Wert anzeigen/ändern"
+  echo -e "${YELLOW}[6]${NC} 📂 Aktive Swap-Geräte anzeigen"
+  echo -e "${YELLOW}[7]${NC} 📴 Swap dauerhaft deaktivieren"
+  echo -e "${YELLOW}[8]${NC} 🚪 Beenden"
+  echo -ne "\n🔢 ${CYAN}Auswahl eingeben [1-8]: ${NC}"
   read -r CHOICE
   case $CHOICE in
     1) create_swap ;;
     2) remove_swap ;;
     3) resize_swap ;;
-    4) echo -e "\n👋 ${GREEN}Beende Skript...${NC}"; exit 0 ;;
-    5) show_swap_usage ;;
+    4) show_swap_usage ;;
+    5) configure_swappiness ;;
+    6) list_all_swap ;;
+    7) disable_swap_permanently ;;
+    8) echo -e "\n👋 ${GREEN}Beende Skript...${NC}"; exit 0 ;;
     *) echo -e "\n${RED}❗ Ungültige Eingabe. Bitte erneut versuchen.${NC}"; sleep 1; show_menu ;;
   esac
 }
@@ -121,4 +127,40 @@ function show_swap_usage() {
   show_menu
 }
 
+function configure_swappiness() {
+  CURRENT=$(cat /proc/sys/vm/swappiness)
+  echo -e "\n${CYAN}📉 Aktueller Swappiness-Wert: ${YELLOW}${CURRENT}${NC}"
+  read -erp "✏️ Neuer Wert eingeben (0–100) oder [Enter] zum Beenden: " NEW
+  if [[ "$NEW" =~ ^[0-9]+$ ]] && ((NEW >= 0 && NEW <= 100)); then
+    echo "vm.swappiness=$NEW" > /etc/sysctl.d/99-swappiness.conf
+    sysctl -q -p /etc/sysctl.d/99-swappiness.conf
+    echo -e "${GREEN}✅ Neuer Wert gesetzt: $NEW${NC}"
+  else
+    echo -e "${YELLOW}ℹ️ Kein neuer Wert gesetzt.${NC}"
+  fi
+  read -erp "🔁 ${CYAN}Zurück zum Menü? [Enter]${NC}"
+  show_menu
+}
+
+function list_all_swap() {
+  echo -e "\n${MAGENTA}📂 Alle aktiven Swap-Geräte:${NC}"
+  swapon --show --output=NAME,TYPE,SIZE,USED,PRIO
+  echo ""
+  read -erp "🔁 ${CYAN}Zurück zum Menü? [Enter]${NC}"
+  show_menu
+}
+
+function disable_swap_permanently() {
+  require_root
+  echo -e "${RED}⚠️ Swap wird dauerhaft deaktiviert...${NC}"
+  swapoff -a
+  sed -i '/swap/d' /etc/fstab
+  rm -f /etc/sysctl.d/99-swappiness.conf
+  sysctl -q -w vm.swappiness=60 || true
+  echo -e "${GREEN}✅ Swap deaktiviert & aus Autostart entfernt.${NC}"
+  read -erp "🔁 ${CYAN}Zurück zum Menü? [Enter]${NC}"
+  show_menu
+}
+
 show_menu
+
