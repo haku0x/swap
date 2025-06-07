@@ -154,36 +154,115 @@ function create_swap() {
 }
 
 function remove_swap() {
-  require_root
-  if swapon --show | grep -q "$SWAP_FILE"; then
-    echo -e "${CYAN}🧹 Deaktiviere Swap...${NC}"
-    swapoff "$SWAP_FILE"
-  else
-    echo -e "${YELLOW}⚠️ Kein aktiver Swap unter $SWAP_FILE gefunden.${NC}"
-  fi
-  echo -e "${RED}🗑️ Entferne Swap-Datei...${NC}"
-  rm -f "$SWAP_FILE"
-  sed -i "\|$SWAP_FILE|d" /etc/fstab
-  rm -f /etc/sysctl.d/99-swappiness.conf
-  sysctl -q -w vm.swappiness=60 || true
-  echo -e "${GREEN}✅ Swap wurde entfernt.${NC}"
+    require_root
+    echo -e "\n${CYAN}🔍 Überprüfe Swap-Status...${NC}"
+    
+    # Prüfe ob Swap aktiv ist
+    if swapon --show | grep -q "$SWAP_FILE"; then
+        echo -e "${YELLOW}⚠️  Deaktiviere aktiven Swap...${NC}"
+        swapoff -v "$SWAP_FILE" || {
+            echo -e "${RED}❌ Fehler beim Deaktivieren des Swaps.${NC}"
+            echo -e "${YELLOW}ℹ️  Versuche erzwungenes Deaktivieren...${NC}"
+            swapoff -a
+        }
+    else
+        echo -e "${YELLOW}ℹ️  Kein aktiver Swap unter $SWAP_FILE gefunden.${NC}"
+    fi
+
+    # Entferne Swap-Datei
+    if [[ -f "$SWAP_FILE" ]]; then
+        echo -e "${CYAN}🗑️  Entferne Swap-Datei...${NC}"
+        rm -f "$SWAP_FILE" || {
+            echo -e "${RED}❌ Fehler beim Löschen der Swap-Datei.${NC}"
+            echo -e "${YELLOW}ℹ️  Versuche mit erhöhten Rechten...${NC}"
+            sudo rm -f "$SWAP_FILE"
+        }
+    fi
+
+    # Entferne fstab-Eintrag
+    if grep -q "$SWAP_FILE" /etc/fstab; then
+        echo -e "${CYAN}📝 Entferne fstab-Eintrag...${NC}"
+        sed -i "\|$SWAP_FILE|d" /etc/fstab
+    fi
+
+    # Entferne Swappiness-Konfiguration
+    if [[ -f /etc/sysctl.d/99-swappiness.conf ]]; then
+        echo -e "${CYAN}⚙️  Entferne Swappiness-Konfiguration...${NC}"
+        rm -f /etc/sysctl.d/99-swappiness.conf
+        sysctl -q -w vm.swappiness=60 || true
+    fi
+
+    # Überprüfe ob alles entfernt wurde
+    if ! swapon --show | grep -q "$SWAP_FILE" && [[ ! -f "$SWAP_FILE" ]]; then
+        echo -e "\n${GREEN}✅ Swap wurde erfolgreich entfernt.${NC}"
+    else
+        echo -e "\n${RED}⚠️  Swap konnte nicht vollständig entfernt werden.${NC}"
+        echo -e "${YELLOW}ℹ️  Bitte überprüfen Sie manuell:${NC}"
+        echo "1. swapon --show"
+        echo "2. ls -l $SWAP_FILE"
+        echo "3. cat /etc/fstab"
+    fi
 }
 
 function resize_swap() {
-  require_root
-  remove_swap
-  read -erp "📏 Neue Swap-Größe (z. B. 2G, 8G): " NEW_SIZE
-  [[ -z "$NEW_SIZE" ]] && echo -e "${RED}❌ Keine Größe eingegeben.${NC}" && return
-  echo -e "${CYAN}🔧 Erstelle neuen Swap mit $NEW_SIZE...${NC}"
-  fallocate -l "$NEW_SIZE" "$SWAP_FILE" || dd if=/dev/zero of="$SWAP_FILE" bs=1M count=$((${NEW_SIZE::-1} * 1024)) status=progress
-  chmod 600 "$SWAP_FILE"
-  mkswap "$SWAP_FILE" > /dev/null
-  swapon "$SWAP_FILE"
-  grep -q "$SWAP_FILE" /etc/fstab || echo "$SWAP_FILE none swap sw 0 0" >> /etc/fstab
-  echo 'vm.swappiness=10' > /etc/sysctl.d/99-swappiness.conf
-  sysctl -q -p /etc/sysctl.d/99-swappiness.conf
-  echo -e "${GREEN}✅ Swap wurde auf $NEW_SIZE geändert.${NC}"
-  swapon --show | tail -n +2
+    require_root
+    echo -e "\n${CYAN}🔄 Swap-Größe ändern${NC}"
+    
+    # Prüfe ob Swap existiert
+    if ! swapon --show | grep -q "$SWAP_FILE" && [[ ! -f "$SWAP_FILE" ]]; then
+        echo -e "${YELLOW}ℹ️  Kein Swap gefunden. Erstelle neuen Swap...${NC}"
+        create_swap
+        return
+    fi
+
+    # Sichere aktuelle Swap-Größe
+    CURRENT_SIZE=$(swapon --show | grep "$SWAP_FILE" | awk '{print $3}')
+    echo -e "${CYAN}📊 Aktuelle Swap-Größe: ${YELLOW}$CURRENT_SIZE${NC}"
+
+    # Frage nach neuer Größe
+    while true; do
+        read -erp "📦 Neue Swap-Größe eingeben (z.B. 1G, 2G): " NEW_SIZE
+        validate_swap_size "$NEW_SIZE" && break
+    done
+
+    # Bestätigung
+    echo -e "\n${YELLOW}⚠️  Achtung: Swap wird neu erstellt mit Größe $NEW_SIZE${NC}"
+    read -erp "Möchten Sie fortfahren? [j/N]: " confirm
+    [[ ! $confirm =~ ^[Jj]$ ]] && return
+
+    # Entferne alten Swap
+    echo -e "\n${CYAN}🧹 Entferne alten Swap...${NC}"
+    remove_swap
+
+    # Erstelle neuen Swap
+    echo -e "\n${CYAN}📁 Erstelle neuen Swap mit Größe $NEW_SIZE...${NC}"
+    if ! fallocate -l "$NEW_SIZE" "$SWAP_FILE" 2>/dev/null; then
+        echo -e "${YELLOW}ℹ️  Verwende dd als Alternative...${NC}"
+        dd if=/dev/zero of="$SWAP_FILE" bs=1M count=$((${NEW_SIZE::-1} * 1024)) status=progress
+    fi
+
+    # Setze Berechtigungen und aktiviere Swap
+    chmod 600 "$SWAP_FILE"
+    mkswap "$SWAP_FILE" > /dev/null
+    swapon "$SWAP_FILE"
+
+    # Füge fstab-Eintrag hinzu
+    if ! grep -q "$SWAP_FILE" /etc/fstab; then
+        echo "$SWAP_FILE none swap sw 0 0" >> /etc/fstab
+    fi
+
+    # Setze Swappiness
+    echo "vm.swappiness=$DEFAULT_SWAPPINESS" > /etc/sysctl.d/99-swappiness.conf
+    sysctl -q -p /etc/sysctl.d/99-swappiness.conf
+
+    # Überprüfe Ergebnis
+    if swapon --show | grep -q "$SWAP_FILE"; then
+        echo -e "\n${GREEN}✅ Swap wurde erfolgreich auf $NEW_SIZE geändert:${NC}"
+        swapon --show | tail -n +2
+    else
+        echo -e "\n${RED}❌ Fehler beim Ändern der Swap-Größe.${NC}"
+        echo -e "${YELLOW}ℹ️  Bitte überprüfen Sie die Systemprotokolle.${NC}"
+    fi
 }
 
 function show_swap_usage() {
